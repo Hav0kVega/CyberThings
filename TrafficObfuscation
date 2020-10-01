@@ -4,6 +4,13 @@ Below are examples of ssh tunneling to obfuscate traffic while pen-testing a giv
 
 Estb. redirector - 1 hop thru Linux box - Estb. port proxy from Kali machine to end target
 
+      Kali              Ubuntu               XP
+   ---------          ---------          ---------
+  |     5445|------->|         |------->|445      |
+  |         |        |         |        |         |
+  |    *8080|<-------|    *8080|<-------|         |
+   ---------          ---------          ---------
+  10.0.0.110          10.0.0.130          X.X.X.X
 
 NOTE: *For the return path - ALL RETURN PORTS MUST BE THE SAME
 
@@ -33,7 +40,13 @@ meterpreter > shell-------->>>>>>  C:\Windows\System32>
 
 Estb. redirector - 1 hop thru Windows box - Estb. proxy from Kali machine to end target
 
-
+      Kali               W7                 XP
+   ---------          ---------          ---------
+  |         |------->|5445     |------->|445      |
+  |         |        |         |        |         |
+  |    *8080|<-------|    *8080|<-------|         |
+   ---------          ---------          ---------
+  10.0.0.110          10.0.0.50           X.X.X.X
 NOTE: *For the return path - ALL RETURN PORTS MUST BE THE SAME
 
 ON Windows 7 VM - Terminal #1
@@ -68,7 +81,13 @@ meterpreter > shell -------->>>>>>  C:\Windows\System32>
 
 
 Estb. redirector - 2 hops
-
+      Kali              Ubuntu              W7                 XP
+   ---------          ---------          ---------          ---------
+  |     5445|------->|22       |------->|9050     |------->|445      |
+  |         |        |         |        |         |        |         |
+  |    *9051|<-------|    *9051|<-------|    *9051|<-------|         |
+   ---------          ---------          ---------          ---------
+  10.0.0.110          10.0.0.130         10.0.0.50           X.X.X.X
 NOTE: *For the return path - ALL RETURN PORTS MUST BE THE SAME
 
 ON KALI VM - Terminal #1
