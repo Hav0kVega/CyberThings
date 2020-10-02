@@ -1,4 +1,6 @@
-Below are examples of ssh tunneling to obfuscate traffic while pen-testing a given environment. For simplicities sake, I've included the age old ms08_067_netapi example because it almost always works. 
+Below are examples of ssh tunneling to obfuscate traffic while pen-testing a given environment. 
+
+For simplicities sake, I've included the age old ms08_067_netapi example because it almost always works. 
 
 
 
