@@ -111,9 +111,9 @@ NOTE: *For the return path - ALL RETURN PORTS MUST BE THE SAME
 ON KALI VM - Terminal #1
 	root@kali > ssh student@192.168.0.130
 	
-student@10.0.0.130 > sudo nano /etc/ssh/sshd_config
+student@192.168.0.130 > sudo nano /etc/ssh/sshd_config
 		*either uncomment, or add a line with “GatewayPorts Yes”*
-	student@10.0.0.130 > exit
+	student@192.168.0.130 > exit
 
 root@kali > ssh student@192.168.0.130 -L 5445:192.168.0.50:9050 -R 9051:0.0.0.0:9051
 
